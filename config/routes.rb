@@ -4,5 +4,7 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "articles#index"
   get 'maps/result', to: 'maps#result'
+  get 'geocode', to: 'maps#geocode'
+
   resources :maps, except: [:show]
 end

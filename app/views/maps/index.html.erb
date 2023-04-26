@@ -1,5 +1,41 @@
-<input id="address" type="textbox" value="">
-<input type="button" value="地図を検索" onclick="codeAddress()">
+<form id="geocode-form">
+  <label for="address">Address:</label>
+  <input type="text" name="address" id="address">
+  <button type="submit">Geocode</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+  $(function() {
+    // フォームの送信イベントを取得する
+    $('#geocode-form').on('submit', function(event) {
+      event.preventDefault(); // デフォルトの送信処理をキャンセルする
+
+      // 送信するデータを準備する
+      var address = $('#address').val();
+      var data = { address: address };
+
+      // Ajaxリクエストを送信する
+      $.ajax({
+        url: '/geocode',
+        method: 'GET',
+        data: data,
+        dataType: 'json',
+        success: function(response) {
+          // 結果を表示する
+          var latitude = response.latitude;
+          var longitude = response.longitude;
+          $('#result').html('Latitude: ' + latitude + '<br>Longitude: ' + longitude);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          // エラーが発生した場合の処理
+          alert('Error: ' + textStatus);
+        }
+      });
+    });
+  });
+</script>
 <div class="flex">
   <div id='map'></div>
     <div>
