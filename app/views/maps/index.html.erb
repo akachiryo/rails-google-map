@@ -1,12 +1,66 @@
 <input id="address" type="textbox" value="">
 <input type="button" value="地図を検索" onclick="codeAddress()">
+<div class="flex">
+  <div id='map'></div>
+    <div>
+        <button onclick="getLocation()" id="get-button">現在地を取得する</button>
 
-<div id='map'></div>
+        <%= form_tag({controller:"maps",action:"result"}, method: :get) do %>
+            <p>
+                <%= hidden_field_tag :lat, :value => "緯度", id: :lat %>
+                <%= hidden_field_tag :lng, :value => "軽度", id: :lng %>
+            </p>
+              <p>
+                    <%= label_tag :distance, "検索半径（km）" %>
+                    <%= number_field_tag :distance, 10, min: 1, max: 100, step: 1 %>
+                </p>
+            <div id="response">未取得</div>
+            <%= submit_tag "送信" %>
+        <% end %>
+
+        <script>
+            function getLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(showPosition);
+                } else {
+                    alert("Geolocation is not supported by this browser.");
+                }
+            }
+
+            function showPosition(position) {
+
+            $.ajax({
+            type: 'GET',
+            url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&sensor=true&key=<%= ENV['GOOGLE_MAP_API_KEY'] %>&language=en`,
+            }).then(function(response){
+                dis1 = Number(response.results[0].geometry.location.lat)
+                dis2 = Number(response.results[0].geometry.location.lng)
+                console.log(response);
+                document.getElementById('lat').value = dis1;
+                document.getElementById('lng').value = dis2;
+                document.getElementById('get-button').textContent = "取得済";
+
+            })
+
+            }
+        </script>
+        <% unless @spots.nil? %>
+            <% @spots.each do |t| %>
+                <p>住所 : <%= t["address"] %></p>
+                <p>緯度 : <%= t["latitude"] %></p>
+                <p>経度 : <%= t["longitude"] %></p>
+            <% end %>
+        <% end %>
+  </div>
+</div>
 
 <style>
     #map {
         height: 400px;
         width: 400px;
+    }
+    .flex{
+        display: flex;
     }
 </style>
 
@@ -25,35 +79,35 @@
                 lat: 35.6458437,
                 lng: 139.7046171
             },
-            zoom: 12,
+            zoom: 10,
         });
 
-        // // // mapsテーブルにあるそれぞれのレコードをmap上に表示
-        // <% @maps.each do |m| %>
-        //     (function(){
-        //     var contentString = "住所：<%= m.address %>";
+        // // mapsテーブルにあるそれぞれのレコードをmap上に表示
+        <% @maps.each do |m| %>
+            (function(){
+            var contentString = "住所：<%= m.address %>";
 
-        //     // マーカーを立てる
-        //     var marker = new google.maps.Marker({
-        //         position:{lat: <%= m.latitude %>, lng: <%= m.longitude %>},
-        //         map: map,
-        //         title: contentString
-        //     });
+            // マーカーを立てる
+            var marker = new google.maps.Marker({
+                position:{lat: <%= m.latitude %>, lng: <%= m.longitude %>},
+                map: map,
+                title: contentString
+            });
 
-        //     // 情報ウィンドウ(吹き出し)の定義
-        //     // 投稿の詳細ページへのリンクも
-        //     var infowindow = new google.maps.InfoWindow({
-        //     position: {lat: <%= m.latitude %>, lng: <%= m.longitude %>},
-        //     content: "<a href='<%= map_url(m.id) %>' target='_blank'><%= m.address %></a>"
-        //     });
+            // 情報ウィンドウ(吹き出し)の定義
+            // 投稿の詳細ページへのリンクも
+            var infowindow = new google.maps.InfoWindow({
+            position: {lat: <%= m.latitude %>, lng: <%= m.longitude %>},
+            content: "<a href='<%= map_url(m.id) %>' target='_blank'><%= m.address %></a>"
+            });
 
-        //     // クリックしたときに情報ウィンドウを表示
-        //     marker.addListener('click', function() {
-        //     infowindow.open(map, marker);
-        //     });
+            // クリックしたときに情報ウィンドウを表示
+            marker.addListener('click', function() {
+            infowindow.open(map, marker);
+            });
 
-        //     })();
-        // <% end %>
+            })();
+        <% end %>
     }
 
     let geocoder

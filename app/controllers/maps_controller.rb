@@ -1,37 +1,15 @@
 class MapsController < ApplicationController
-  def search
-  end
 
   def result
-    x1 = params[:lat].to_f * Math::PI / 180
-    y1 = params[:lng].to_f * Math::PI / 180
-
-    arounds = []
-    Map.all.each do |t|
-        x2 = t.latitude * Math::PI / 180
-        y2 = t.longitude * Math::PI / 180
-
-        diff_y = (y1 - y2).abs
-        
-        calc1 = Math.cos(x2) * Math.sin(diff_y)
-        calc2 = Math.cos(x1) * Math.sin(x2) - Math.sin(x1) * Math.cos(x2) * Math.cos(diff_y)
-        
-        numerator = Math.sqrt(calc1 ** 2 + calc2 ** 2)
-        denominator = Math.sin(x1) * Math.sin(x2) + Math.cos(x1) * Math.cos(x2) * Math.cos(diff_y)
-        degree = Math.atan2(numerator, denominator)
-
-        α = 6378.137
-        result = degree * α
-
-        arounds.push( [result, t] )
-    end
-
-    @arounds = arounds.sort_by{ |s| s[0] }
-end
+    current_location = [params[:lat].to_f, params[:lng].to_f]
+    @spots = Map.near(current_location, params[:distance], units: :km)
+    redirect_to :action => "index", spots: @spots.to_json
+  end
 
   def index
-      @maps = Map.all
-      @map = Map.new
+    @maps = Map.all
+    @map = Map.new
+    @spots = JSON.parse(params[:spots]) if params[:spots]
   end
 
   def create
